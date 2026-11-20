@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>理容室カルテ</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#6e4529">
+
+<!-- iOS: add to home screen as a standalone app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="理容室カルテ">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<style>
+  :root{
+    --bg:#f5f3ef;
+    --panel:#ffffff;
+    --ink:#2b2a28;
+    --sub:#6b6762;
+    --line:#e3dfd8;
+    --accent:#8a5a3b;
+    --accent-dark:#6e4529;
+    --accent-bg:#f1e4d8;
+    --danger:#b0493f;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  header{
+    background:var(--accent-dark);
+    color:#fff;
+    padding:14px 20px;
+    padding-top:max(14px, env(safe-area-inset-top));
+    display:flex;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  header h1{
+    font-size:18px;
+    margin:0;
+    white-space:nowrap;
+  }
+  header .spacer{flex:1;}
+  header button, .btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    font-size:14px;
+    white-space:nowrap;
+  }
+  header button:hover, .btn:hover{background:#9c6a48;}
+  header input[type=file]{display:none;}
+  main{
+    max-width:900px;
+    margin:0 auto;
+    padding:20px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    margin-bottom:16px;
+  }
+  .toolbar{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .toolbar input[type=search]{
+    flex:1;
+    min-width:160px;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:14px;
+  }
+  table{width:100%;border-collapse:collapse;}
+  th,td{
+    text-align:left;
+    padding:10px 8px;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  tr.customer-row{cursor:pointer;}
+  tr.customer-row:hover{background:var(--accent-bg);}
+  .muted{color:var(--sub);font-size:13px;}
+  .empty{
+    text-align:center;
+    color:var(--sub);
+    padding:40px 0;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--sub);
+    margin-bottom:4px;
+    margin-top:12px;
+  }
+  input[type=text],input[type=tel],input[type=date],input[type=email],textarea,select{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  textarea{resize:vertical;min-height:70px;}
+  .grid2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0 16px;
+  }
+  .row-actions{
+    margin-top:18px;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .row-actions .danger{background:var(--danger);}
+  .row-actions .danger:hover{background:#c15b50;}
+  .row-actions .ghost{background:#efe9e0;color:var(--ink);}
+  .row-actions .ghost:hover{background:#e5ddd0;}
+  h2{font-size:17px;margin:0 0 14px;border-left:4px solid var(--accent);padding-left:10px;}
+  h3{font-size:15px;margin:22px 0 10px;color:var(--accent-dark);}
+  .visit-card{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    background:#fdfcfa;
+  }
+  .visit-card .visit-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .visit-card .visit-date{font-weight:bold;font-size:15px;}
+  .tag{
+    display:inline-block;
+    background:var(--accent-bg);
+    color:var(--accent-dark);
+    border-radius:12px;
+    padding:2px 10px;
+    font-size:12px;
+    margin:2px 4px 2px 0;
+  }
+  .visit-detail{white-space:pre-wrap;font-size:14px;margin-top:6px;}
+  .photo-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .photo-row img{
+    width:84px;height:84px;object-fit:cover;border-radius:6px;border:1px solid var(--line);
+    cursor:pointer;
+  }
+  .visit-buttons{margin-top:8px;display:flex;gap:8px;}
+  .visit-buttons button{
+    background:none;border:1px solid var(--line);color:var(--sub);
+    padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;
+  }
+  .visit-buttons button:hover{background:var(--accent-bg);}
+  .checkrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;}
+  .checkrow label{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--ink);margin:0;}
+  .checkrow input{width:auto;margin:0;}
+  .photo-input-wrap{margin-top:8px;}
+  .back-link{
+    display:inline-block;margin-bottom:12px;color:var(--accent-dark);
+    cursor:pointer;font-size:14px;
+  }
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.4);
+    display:flex;align-items:center;justify-content:center;z-index:100;padding:16px;
+  }
+  .modal{
+    background:#fff;border-radius:var(--radius);padding:20px;max-width:520px;width:100%;
+    max-height:90vh;overflow:auto;
+  }
+  #printArea{display:none;}
+  @media print{
+    header,.toolbar,.row-actions,.back-link,.visit-buttons,.photo-input-wrap,.modal-overlay{display:none !important;}
+    main > .panel{display:none !important;}
+    #printArea{display:block !important;}
+    #printArea h2{border:none;padding:0;}
+  }
+  .zoom-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.8);
+    display:flex;align-items:center;justify-content:center;z-index:200;
+  }
+  .zoom-overlay img{max-width:92vw;max-height:92vh;border-radius:6px;}
+  .save-note{font-size:12px;color:var(--sub);margin-top:10px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>✂️ 理容室カルテ</h1>
+  <div class="spacer"></div>
+  <button id="btnExport">JSONに保存</button>
+  <button id="btnImportTrigger">JSONを読み込み</button>
+  <input type="file" id="fileImport" accept="application/json">
+</header>
+<main id="app"></main>
+
+<div id="printArea"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "rizoushitsu_karte_v1";
+  var state = {
+    customers: [],
+    view: "list",      // list | detail | visitForm
+    currentCustomerId: null,
+    currentVisitId: null,
+    search: ""
+  };
+
+  function uid(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  }
+
+  function escapeHtml(s){
+    if(s === null || s === undefined) return "";
+    return String(s)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+
+  function nl2br(s){
+    return escapeHtml(s).replace(/\n/g,"<br>");
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var data = JSON.parse(raw);
+        state.customers = data.customers || [];
+      }
+    }catch(e){
+      console.error("load failed", e);
+    }
+  }
+
+  function persist(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        version:1,
+        savedAt: new Date().toISOString(),
+        customers: state.customers
+      }));
+    }catch(e){
+      console.error("persist failed", e);
+      alert("ブラウザ内保存に失敗しました(容量不足の可能性)。JSON書き出しでバックアップしてください。");
+    }
+  }
+
+  function findCustomer(id){
+    return state.customers.find(function(c){ return c.id === id; });
+  }
+  function findVisit(customer, id){
+    return customer.visits.find(function(v){ return v.id === id; });
+  }
+
+  // ---------- rendering ----------
+
+  function render(){
+    var app = document.getElementById("app");
+    if(state.view === "list"){
+      app.innerHTML = renderList();
+    } else if(state.view === "detail"){
+      var c = findCustomer(state.currentCustomerId);
+      if(!c){ state.view = "list"; return render(); }
+      app.innerHTML = renderDetail(c);
+    } else if(state.view === "visitForm"){
+      var c2 = findCustomer(state.currentCustomerId);
+      if(!c2){ state.view = "list"; return render(); }
+      var v = state.currentVisitId ? findVisit(c2, state.currentVisitId) : null;
+      app.innerHTML = renderVisitForm(c2, v);
+    }
+    bindEvents();
+  }
+
+  function renderList(){
+    var q = state.search.trim().toLowerCase();
+    var list = state.customers.filter(function(c){
+      if(!q) return true;
+      return (c.name||"").toLowerCase().indexOf(q) >= 0 ||
+             (c.nameKana||"").toLowerCase().indexOf(q) >= 0 ||
+             (c.phone||"").indexOf(q) >= 0;
+    });
+    list.sort(function(a,b){ return (a.nameKana||a.name||"").localeCompare(b.nameKana||b.name||"", "ja"); });
+
+    var rows = list.map(function(c){
+      var lastVisit = c.visits && c.visits.length ?
+        c.visits.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0].date : "-";
+      return (
+        '<tr class="customer-row" data-id="'+c.id+'">' +
+          '<td>'+escapeHtml(c.name)+'<div class="muted">'+escapeHtml(c.nameKana||"")+'</div></td>' +
+          '<td>'+escapeHtml(c.phone||"-")+'</td>' +
+          '<td>'+escapeHtml(lastVisit)+'</td>' +
+          '<td class="muted">'+(c.visits?c.visits.length:0)+'回</td>' +
+        '</tr>'
+      );
+    }).join("");
+
+    return (
+      '<div class="toolbar">' +
+        '<input type="search" id="searchBox" placeholder="名前・フリガナ・電話番号で検索" value="'+escapeHtml(state.search)+'">' +
+        '<button class="btn" id="btnNewCustomer">＋ 新規顧客</button>' +
+      '</div>' +
+      '<div class="panel">' +
+        (list.length ?
+          '<table><thead><tr><th>氏名</th><th>電話番号</th><th>最終来店</th><th>来店数</th></tr></thead><tbody>'+rows+'</tbody></table>'
+          : '<div class="empty">'+(state.customers.length? '該当する顧客が見つかりません' : 'まだ顧客が登録されていません。「新規顧客」から追加してください。')+'</div>'
+        ) +
+      '</div>' +
+      '<div class="save-note">顧客数: '+state.customers.length+'件 ／ データはこのブラウザに自動保存されています。他の端末に移す・バックアップする場合は右上の「JSONに保存」を使ってください。</div>'
+    );
+  }
+
+  function visitSummaryTags(v){
+    var tags = [];
+    if(v.menu){
+      ["カット","カラー","パーマ","シェービング","トリートメント"].forEach(function(key){
+        if(v.menu[key]) tags.push(key);
+      });
+      if(v.menu.other) tags.push(v.menu.other);
+    }
+    return tags.map(function(t){ return '<span class="tag">'+escapeHtml(t)+'</span>'; }).join("");
+  }
+
+  function renderDetail(c){
+    var visits = (c.visits||[]).slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+    var visitHtml = visits.map(function(v){
+      var photos = (v.photos||[]).map(function(p){
+        return '<img src="'+p+'" data-full="'+p+'" class="photo-thumb">';
+      }).join("");
+      return (
+        '<div class="visit-card" data-visit-id="'+v.id+'">' +
+          '<div class="visit-head">' +
+            '<span class="visit-date">'+escapeHtml(v.date)+'</span>' +
+            '<span class="muted">担当: '+escapeHtml(v.staff||"-")+'</span>' +
+          '</div>' +
+          '<div>'+visitSummaryTags(v)+'</div>' +
+          (v.details ? '<div class="visit-detail">'+nl2br(v.details)+'</div>' : "") +
+          (v.photos && v.photos.length ? '<div class="photo-row">'+photos+'</div>' : "") +
+          (v.nextAppointment ? '<div class="muted" style="margin-top:6px;">次回予約: '+escapeHtml(v.nextAppointment)+'</div>' : "") +
+          (v.memo ? '<div class="visit-detail muted">メモ: '+nl2br(v.memo)+'</div>' : "") +
+          '<div class="visit-buttons">' +
+            '<button class="editVisitBtn" data-id="'+v.id+'">編集</button>' +
+            '<button class="deleteVisitBtn" data-id="'+v.id+'">削除</button>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join("");
+
+    return (
+      '<div class="back-link" id="backToList">← 顧客一覧へ戻る</div>' +
+      '<div class="panel">' +
+        '<h2>基本情報</h2>' +
+        '<div class="grid2">' +
+          '<div><label>氏名</label><input type="text" id="f_name" value="'+escapeHtml(c.name)+'"></div>' +
+          '<div><label>フリガナ</label><input type="text" id="f_kana" value="'+escapeHtml(c.nameKana||"")+'"></div>' +
+          '<div><label>電話番号</label><input type="tel" id="f_phone" value="'+escapeHtml(c.phone||"")+'"></div>' +
+          '<div><label>生年月日</label><input type="date" id="f_birthday" value="'+escapeHtml(c.birthday||"")+'"></div>' +
+          '<div><label>性別</label>' +
+            '<select id="f_gender">' +
+              ['','男性','女性','その他'].map(function(g){
+                return '<option value="'+g+'" '+(c.gender===g?'selected':'')+'>'+(g||"未選択")+'</option>';
+              }).join("") +
+            '</select>' +
+          '</div>' +
+          '<div><label>メールアドレス</label><input type="email" id="f_email" value="'+escapeHtml(c.email||"")+'"></div>' +
+        '</div>' +
+        '<label>住所</label><input type="text" id="f_address" value="'+escapeHtml(c.address||"")+'">' +
+        '<label>お客様メモ(アレルギー・頭皮の状態・ご要望の傾向など)</label>' +
+        '<textarea id="f_memo">'+escapeHtml(c.memo||"")+'</textarea>' +
+        '<div class="row-actions">' +
+          '<button class="btn" id="btnSaveCustomer">基本情報を保存</button>' +
+          '<button class="btn ghost" id="btnPrintCustomer">🖨 印刷用カルテ</button>' +
+          '<button class="danger" id="btnDeleteCustomer">顧客を削除</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="panel">' +
+        '<h2>来店履歴('+visits.length+'件)</h2>' +
+        '<button class="btn" id="btnNewVisit" style="margin-bottom:14px;">＋ 来店記録を追加</button>' +
+        (visits.length ? visitHtml : '<div class="empty">まだ来店記録がありません。</div>') +
+     '</div>'
+    );
+  }
+
+  function renderVisitForm(c, v){
+    var isNew = !v;
+    v = v || { date: new Date().toISOString().slice(0,10), staff:"", menu:{}, details:"", photos:[], nextAppointment:"", memo:"" };
+    var menu = v.menu || {};
+    var menuOptions = ["カット","カラー","パーマ","シェービング","トリートメント"];
+    var checks = menuOptions.map(function(m){
+      return '<label><input type="checkbox" class="menuCheck" value="'+m+'" '+(menu[m]?'checked':'')+'> '+m+'</label>';
+    }).join("");
+
+    var photos = (v.photos||[]).map(function(p,idx){
+      return '<div style="position:relative;"><img src="'+p+'" class="photo-thumb" data-full="'+p+'">' +
+        '<button type="button" class="removePhotoBtn" data-idx="'+idx+'" style="position:absolute;top:-6px;right:-6px;background:#b0493f;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;">×</button></div>';
+    }).join("");
+
+    return (
+      '<div class="back-link" id="backToDetail">← 顧客詳細へ戻る</div>' +
+      '<div class="panel">' +
+        '<h2>'+(isNew? '来店記録の追加' : '来店記録の編集')+' - '+escapeHtml(c.name)+'</h2>' +
+        '<div class="grid2">' +
+          '<div><label>来店日</label><input type="date" id="v_date" value="'+escapeHtml(v.date)+'"></div>' +
+          '<div><label>担当スタッフ</label><input type="text" id="v_staff" value="'+escapeHtml(v.staff||"")+'"></div>' +
+        '</div>' +
+        '<label>施術メニュー</label>' +
+        '<div class="checkrow">'+checks+'</div>' +
+        '<label>その他メニュー(自由記述)</label>' +
+        '<input type="text" id="v_other" value="'+escapeHtml(menu.other||"")+'" placeholder="例: ヘッドスパ">' +
+        '<label>施術詳細(薬剤名・配合・放置時間・使用量など)</label>' +
+        '<textarea id="v_details">'+escapeHtml(v.details||"")+'</textarea>' +
+        '<label>写真</label>' +
+        '<div class="photo-row" id="photoPreview">'+photos+'</div>' +
+        '<div class="photo-input-wrap"><input type="file" id="v_photoInput" accept="image/*" multiple></div>' +
+        '<div class="grid2">' +
+          '<div><label>次回予約日</label><input type="date" id="v_next" value="'+escapeHtml(v.nextAppointment||"")+'"></div>' +
+          '<div></div>' +
+        '</div>' +
+        '<label>メモ(スタッフ間共有事項など)</label>' +
+        '<textarea id="v_memo">'+escapeHtml(v.memo||"")+'</textarea>' +
+        '<div class="row-actions">' +
+          '<button class="btn" id="btnSaveVisit">保存</button>' +
+          '<button class="ghost" id="btnCancelVisit">キャンセル</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  // ---------- photo helpers ----------
+
+  function resizeImage(file, maxDim, quality, cb){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var w = img.width, h = img.height;
+        if(w > maxDim || h > maxDim){
+          if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        cb(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // temp holder for photos being added in the currently open visit form
+  var pendingPhotos = [];
+
+  // ---------- event binding ----------
+
+  function bindEvents(){
+    if(state.view === "list"){
+      var searchBox = document.getElementById("searchBox");
+      if(searchBox){
+        searchBox.addEventListener("input", function(){
+          state.search = this.value;
+          render();
+          // restore focus/cursor after re-render
+          var sb = document.getElementById("searchBox");
+          if(sb){ sb.focus(); sb.setSelectionRange(sb.value.length, sb.value.length); }
+        });
+      }
+      var btnNew = document.getElementById("btnNewCustomer");
+      if(btnNew) btnNew.addEventListener("click", function(){
+        var c = { id: uid(), name:"新しいお客様", nameKana:"", phone:"", birthday:"", gender:"", email:"", address:"", memo:"", visits:[] };
+        state.customers.push(c);
+        persist();
+        state.currentCustomerId = c.id;
+        state.view = "detail";
+        render();
+      });
+      document.querySelectorAll(".customer-row").forEach(function(row){
+        row.addEventListener("click", function(){
+          state.currentCustomerId = row.getAttribute("data-id");
+          state.view = "detail";
+          render();
+        });
+      });
+    }
+
+    if(state.view === "detail"){
+      var c = findCustomer(state.currentCustomerId);
+      document.getElementById("backToList").addEventListener("click", function(){
+        state.view = "list"; render();
+      });
+      document.getElementById("btnSaveCustomer").addEventListener("click", function(){
+        c.name = document.getElementById("f_name").value.trim() || "(名前未設定)";
+        c.nameKana = document.getElementById("f_kana").value.trim();
+        c.phone = document.getElementById("f_phone").value.trim();
+        c.birthday = document.getElementById("f_birthday").value;
+        c.gender = document.getElementById("f_gender").value;
+        c.email = document.getElementById("f_email").value.trim();
+        c.address = document.getElementById("f_address").value.trim();
+        c.memo = document.getElementById("f_memo").value;
+        persist();
+        render();
+      });
+      document.getElementById("btnDeleteCustomer").addEventListener("click", function(){
+        if(confirm("「"+c.name+"」の顧客データを削除します。よろしいですか?(来店履歴も全て削除されます)")){
+          state.customers = state.customers.filter(function(x){ return x.id !== c.id; });
+          persist();
+          state.view = "list";
+          render();
+        }
+      });
+      document.getElementById("btnPrintCustomer").addEventListener("click", function(){
+        printCustomer(c);
+      });
+      document.getElementById("btnNewVisit").addEventListener("click", function(){
+        state.currentVisitId = null;
+        state.view = "visitForm";
+        render();
+      });
+      document.querySelectorAll(".editVisitBtn").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          state.currentVisitId = btn.getAttribute("data-id");
+          state.view = "visitForm";
+          render();
+        });
+      });
+      document.querySelectorAll(".deleteVisitBtn").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          if(confirm("この来店記録を削除します。よろしいですか?")){
+            var vid = btn.getAttribute("data-id");
+            c.visits = c.visits.filter(function(x){ return x.id !== vid; });
+            persist();
+            render();
+          }
+        });
+      });
+      document.querySelectorAll(".photo-thumb").forEach(function(img){
+        img.addEventListener("click", function(){ showZoom(img.getAttribute("data-full")); });
+      });
+    }
+
+    if(state.view === "visitForm"){
+      pendingPhotos = [];
+      var c2 = findCustomer(state.currentCustomerId);
+      var existingVisit = state.currentVisitId ? findVisit(c2, state.currentVisitId) : null;
+      var currentPhotos = existingVisit ? (existingVisit.photos||[]).slice() : [];
+
+      document.getElementById("backToDetail").addEventListener("click", function(){
+        state.view = "detail"; render();
+      });
+      document.getElementById("btnCancelVisit").addEventListener("click", function(){
+        state.view = "detail"; render();
+      });
+
+      document.getElementById("v_photoInput").addEventListener("change", function(e){
+        var files = Array.prototype.slice.call(e.target.files);
+        var remaining = files.length;
+        if(!remaining) return;
+        files.forEach(function(file){
+          resizeImage(file, 1000, 0.75, function(dataUrl){
+            currentPhotos.push(dataUrl);
+            refreshPhotoPreview();
+          });
+        });
+        e.target.value = "";
+      });
+
+      function refreshPhotoPreview(){
+        var wrap = document.getElementById("photoPreview");
+        wrap.innerHTML = currentPhotos.map(function(p, idx){
+          return '<div style="position:relative;"><img src="'+p+'" class="photo-thumb" data-full="'+p+'">' +
+            '<button type="button" class="removePhotoBtn" data-idx="'+idx+'" style="position:absolute;top:-6px;right:-6px;background:#b0493f;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;line-height:1;">×</button></div>';
+        }).join("");
+        wrap.querySelectorAll(".removePhotoBtn").forEach(function(btn){
+          btn.addEventListener("click", function(){
+            currentPhotos.splice(parseInt(btn.getAttribute("data-idx"),10), 1);
+            refreshPhotoPreview();
+          });
+        });
+        wrap.querySelectorAll(".photo-thumb").forEach(function(img){
+          img.addEventListener("click", function(){ showZoom(img.getAttribute("data-full")); });
+        });
+      }
+      refreshPhotoPreview();
+
+      document.getElementById("btnSaveVisit").addEventListener("click", function(){
+        var menu = {};
+        document.querySelectorAll(".menuCheck").forEach(function(chk){
+          if(chk.checked) menu[chk.value] = true;
+        });
+        var other = document.getElementById("v_other").value.trim();
+        if(other) menu.other = other;
+
+        var data = {
+          id: existingVisit ? existingVisit.id : uid(),
+          date: document.getElementById("v_date").value || new Date().toISOString().slice(0,10),
+          staff: document.getElementById("v_staff").value.trim(),
+          menu: menu,
+          details: document.getElementById("v_details").value,
+          photos: currentPhotos,
+          nextAppointment: document.getElementById("v_next").value,
+          memo: document.getElementById("v_memo").value
+        };
+
+        if(!c2.visits) c2.visits = [];
+        if(existingVisit){
+          var idx = c2.visits.findIndex(function(x){ return x.id === existingVisit.id; });
+          c2.visits[idx] = data;
+        } else {
+          c2.visits.push(data);
+        }
+        persist();
+        state.view = "detail";
+        state.currentVisitId = null;
+        render();
+      });
+    }
+  }
+
+  function showZoom(src){
+    var overlay = document.createElement("div");
+    overlay.className = "zoom-overlay";
+    overlay.innerHTML = '<img src="'+src+'">';
+    overlay.addEventListener("click", function(){ overlay.remove(); });
+    document.body.appendChild(overlay);
+  }
+
+  // ---------- print ----------
+
+  function printCustomer(c){
+    var visits = (c.visits||[]).slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+    var visitsHtml = visits.map(function(v){
+      return (
+        '<div style="border-top:1px solid #ccc;padding:10px 0;">' +
+          '<div><strong>'+escapeHtml(v.date)+'</strong> 　担当: '+escapeHtml(v.staff||"-")+'</div>' +
+          '<div>'+visitSummaryTags(v)+'</div>' +
+          (v.details ? '<div style="margin-top:4px;">'+nl2br(v.details)+'</div>' : "") +
+          (v.nextAppointment ? '<div style="margin-top:4px;color:#555;">次回予約: '+escapeHtml(v.nextAppointment)+'</div>' : "") +
+          (v.memo ? '<div style="margin-top:4px;color:#555;">メモ: '+nl2br(v.memo)+'</div>' : "") +
+        '</div>'
+      );
+    }).join("");
+
+    document.getElementById("printArea").innerHTML =
+      '<h2>理容室カルテ</h2>' +
+      '<div><strong>'+escapeHtml(c.name)+'</strong>('+escapeHtml(c.nameKana||"")+')</div>' +
+      '<div>電話: '+escapeHtml(c.phone||"-")+' 　生年月日: '+escapeHtml(c.birthday||"-")+' 　性別: '+escapeHtml(c.gender||"-")+'</div>' +
+      '<div>住所: '+escapeHtml(c.address||"-")+'</div>' +
+      (c.memo ? '<div style="margin-top:6px;">メモ: '+nl2br(c.memo)+'</div>' : "") +
+      '<h3 style="margin-top:16px;">来店履歴</h3>' +
+      visitsHtml;
+
+    window.print();
+  }
+
+  // ---------- export / import ----------
+
+  document.getElementById("btnExport").addEventListener("click", function(){
+    var data = { version:1, exportedAt: new Date().toISOString(), customers: state.customers };
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var ts = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = "karte_" + ts + ".json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("btnImportTrigger").addEventListener("click", function(){
+    document.getElementById("fileImport").click();
+  });
+
+  document.getElementById("fileImport").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        var data = JSON.parse(evt.target.result);
+        if(!data || !Array.isArray(data.customers)) throw new Error("不正な形式です");
+        var mode = confirm(
+          "読み込んだデータ内の顧客数: " + data.customers.length + "件\n\n" +
+          "OK: 今のデータに追加(統合)する\nキャンセル: 今のデータを置き換える"
+        );
+        if(mode){
+          // merge: avoid duplicate ids
+          var existingIds = new Set(state.customers.map(function(c){return c.id;}));
+          data.customers.forEach(function(c){
+            if(existingIds.has(c.id)) c.id = uid();
+            state.customers.push(c);
+          });
+        } else {
+          state.customers = data.customers;
+        }
+        persist();
+        state.view = "list";
+        render();
+        alert("読み込みが完了しました。");
+      }catch(err){
+        alert("読み込みに失敗しました: " + err.message);
+      }
+      e.target.value = "";
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- init ----------
+
+  load();
+  render();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(e){
+        console.warn("service worker registration failed", e);
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
