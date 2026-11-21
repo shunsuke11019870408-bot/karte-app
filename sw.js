@@ -1,4 +1,4 @@
-const CACHE = "karte-cache-v2";
+const CACHE = "karte-cache-v3";
 const ASSETS = [
   "./",
   "manifest.json",
