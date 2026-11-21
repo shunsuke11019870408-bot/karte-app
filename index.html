@@ -780,10 +780,16 @@
     if(state.view === "list"){
       var searchBox = document.getElementById("searchBox");
       if(searchBox){
-        searchBox.addEventListener("input", function(){
+        searchBox.addEventListener("input", function(e){
           state.search = this.value;
+          if(e.isComposing) return; // wait for IME (Japanese input) to finish composing
           render();
           // restore focus/cursor after re-render
+          var sb = document.getElementById("searchBox");
+          if(sb){ sb.focus(); sb.setSelectionRange(sb.value.length, sb.value.length); }
+        });
+        searchBox.addEventListener("compositionend", function(){
+          render();
           var sb = document.getElementById("searchBox");
           if(sb){ sb.focus(); sb.setSelectionRange(sb.value.length, sb.value.length); }
         });

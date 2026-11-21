@@ -1,4 +1,4 @@
-const CACHE = "karte-cache-v3";
+const CACHE = "karte-cache-v4";
 const ASSETS = [
   "./",
   "manifest.json",
@@ -25,6 +25,23 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+
+  // Always try the network first for page navigations, so the app shell
+  // (and its Firebase sign-in logic) can't go stale behind an old cache.
+  // Falls back to the cached shell only when offline.
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match("./")))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const network = fetch(event.request)
