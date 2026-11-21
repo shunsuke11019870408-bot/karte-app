@@ -1,10 +1,12 @@
-const CACHE = "karte-cache-v1";
+const CACHE = "karte-cache-v2";
 const ASSETS = [
   "./",
   "manifest.json",
   "icon-192.png",
   "icon-512.png",
-  "apple-touch-icon.png"
+  "apple-touch-icon.png",
+  "logo-header.png",
+  "logo-kiosk.png"
 ];
 
 self.addEventListener("install", (event) => {
