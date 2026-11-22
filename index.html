@@ -307,6 +307,8 @@
     cursor:pointer;
   }
   .kiosk-submit:hover{background:#d8b566;}
+  .birthrow{display:flex;gap:8px;}
+  .birthrow select{flex:1;min-width:0;}
   .kiosk-footer-link{
     display:block;text-align:center;margin-top:20px;color:#a39c86;font-size:12px;cursor:pointer;
   }
@@ -684,6 +686,33 @@
 
   // ---------- kiosk (customer self-registration) ----------
 
+  function pad2(n){ return n < 10 ? "0" + n : "" + n; }
+
+  function birthdayYearOptions(){
+    var thisYear = new Date().getFullYear();
+    var opts = ['<option value="">年</option>'];
+    for(var y = thisYear; y >= 1920; y--){
+      opts.push('<option value="'+y+'">'+y+'</option>');
+    }
+    return opts.join("");
+  }
+
+  function birthdayMonthOptions(){
+    var opts = ['<option value="">月</option>'];
+    for(var m = 1; m <= 12; m++){
+      opts.push('<option value="'+pad2(m)+'">'+m+'</option>');
+    }
+    return opts.join("");
+  }
+
+  function birthdayDayOptions(){
+    var opts = ['<option value="">日</option>'];
+    for(var d = 1; d <= 31; d++){
+      opts.push('<option value="'+pad2(d)+'">'+d+'</option>');
+    }
+    return opts.join("");
+  }
+
   function renderKiosk(){
     return (
       '<div class="kiosk-shell">' +
@@ -697,14 +726,16 @@
           '<input type="text" id="k_kana" placeholder="例: ヤマダ タロウ">' +
           '<label>電話番号</label>' +
           '<input type="tel" id="k_phone" placeholder="例: 090-1234-5678">' +
-          '<div class="grid2">' +
-            '<div><label>生年月日</label><input type="date" id="k_birthday"></div>' +
-            '<div><label>性別</label>' +
-              '<select id="k_gender">' +
-                '<option value="">未選択</option><option value="男性">男性</option><option value="女性">女性</option><option value="その他">その他</option>' +
-              '</select>' +
-            '</div>' +
+          '<label>生年月日</label>' +
+          '<div class="birthrow">' +
+            '<select id="k_birth_y">'+birthdayYearOptions()+'</select>' +
+            '<select id="k_birth_m">'+birthdayMonthOptions()+'</select>' +
+            '<select id="k_birth_d">'+birthdayDayOptions()+'</select>' +
           '</div>' +
+          '<label>性別</label>' +
+          '<select id="k_gender">' +
+            '<option value="">未選択</option><option value="男性">男性</option><option value="女性">女性</option><option value="その他">その他</option>' +
+          '</select>' +
           '<label>メールアドレス</label>' +
           '<input type="email" id="k_email" placeholder="任意">' +
           '<label>ご要望・アレルギーなど(あれば)</label>' +
@@ -974,11 +1005,14 @@
           alert("お名前を入力してください。");
           return;
         }
+        var by = document.getElementById("k_birth_y").value;
+        var bm = document.getElementById("k_birth_m").value;
+        var bd = document.getElementById("k_birth_d").value;
         var payload = {
           name: name,
           nameKana: document.getElementById("k_kana").value.trim(),
           phone: document.getElementById("k_phone").value.trim(),
-          birthday: document.getElementById("k_birthday").value,
+          birthday: (by && bm && bd) ? (by + "-" + bm + "-" + bd) : "",
           gender: document.getElementById("k_gender").value,
           email: document.getElementById("k_email").value.trim(),
           memo: document.getElementById("k_memo").value,
