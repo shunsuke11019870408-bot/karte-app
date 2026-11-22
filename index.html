@@ -724,7 +724,7 @@
           '<input type="text" id="k_name" placeholder="例: 山田 太郎">' +
           '<label>フリガナ</label>' +
           '<input type="text" id="k_kana" placeholder="例: ヤマダ タロウ">' +
-          '<label>電話番号</label>' +
+          '<label>電話番号 <span style="color:var(--danger);">※必須</span></label>' +
           '<input type="tel" id="k_phone" placeholder="例: 090-1234-5678">' +
           '<label>生年月日</label>' +
           '<div class="birthrow">' +
@@ -1005,13 +1005,18 @@
           alert("お名前を入力してください。");
           return;
         }
+        var phone = document.getElementById("k_phone").value.trim();
+        if(!phone){
+          alert("電話番号を入力してください。");
+          return;
+        }
         var by = document.getElementById("k_birth_y").value;
         var bm = document.getElementById("k_birth_m").value;
         var bd = document.getElementById("k_birth_d").value;
         var payload = {
           name: name,
           nameKana: document.getElementById("k_kana").value.trim(),
-          phone: document.getElementById("k_phone").value.trim(),
+          phone: phone,
           birthday: (by && bm && bd) ? (by + "-" + bm + "-" + bd) : "",
           gender: document.getElementById("k_gender").value,
           email: document.getElementById("k_email").value.trim(),
